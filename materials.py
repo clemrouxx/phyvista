@@ -28,9 +28,7 @@ def SmoothMaterial(color) -> Material:
     return Material(color=color,smooth_shading=True)
 
 def plotGridWithMaterial(plotter,grid,material):
-    if type(material) == str:
-        plotter.add_mesh(grid,color=material)
-    else:
+    if type(material) == Material:
         if material.renderingStyle == "mesh":
             plotter.add_mesh(grid,**(material.properties))
         elif material.renderingStyle == "volume":
@@ -40,3 +38,5 @@ def plotGridWithMaterial(plotter,grid,material):
                 plotter.add_volume(grid,**material.properties,show_scalar_bar=False)
         else:
             raise ValueError(f"Unknown material renderingStyle : '{material.renderingStyle}'")
+    else:
+        plotter.add_mesh(grid,color=material)
