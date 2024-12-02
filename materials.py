@@ -19,10 +19,25 @@ class Material:
         newmat.modify(**properties)
         return newmat
 
-GLASS = Material(color="white",opacity=0.7,specular=1,diffuse=0.2,smooth_shading=True, split_sharp_edges=True,specular_power=20)
+GLASS_DARK_THEME = Material(color="white",opacity=0.6,specular=1,diffuse=0.1,smooth_shading=True, split_sharp_edges=True,specular_power=20)
 GLASS_LIGHT_THEME = Material(color="lightblue",opacity=0.2,specular=1,diffuse=0.2,ambient=1,smooth_shading=True, split_sharp_edges=True,specular_power=20)
-METAL = Material(color="white",specular=1,diffuse=0.1,smooth_shading=True, split_sharp_edges=True,specular_power=10)
-METAL_LIGHT_THEME = METAL.variant(diffuse=0.8)
+METAL_DARK_THEME = Material(color="white",specular=1,diffuse=0.1,smooth_shading=True, split_sharp_edges=True,specular_power=10)
+METAL_LIGHT_THEME = METAL_DARK_THEME.variant(diffuse=0.8)
+
+GLASS = GLASS_LIGHT_THEME
+METAL = METAL_LIGHT_THEME
+
+def set_theme(theme:str):
+    global GLASS,METAL
+    if theme == "default":
+        GLASS = GLASS_LIGHT_THEME
+        METAL = METAL_LIGHT_THEME
+    elif theme == "dark":
+        GLASS = GLASS_DARK_THEME
+        METAL = METAL_DARK_THEME
+    else:
+        raise ValueError(f"Theme '{theme}' unknown.")
+
 
 def SmoothMaterial(color) -> Material:
     return Material(color=color,smooth_shading=True)
