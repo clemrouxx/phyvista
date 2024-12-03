@@ -2,7 +2,7 @@ import pyvista as pv
 import numpy as np
 import os
 from phyvista.core import *
-from phyvista.materials import GLASS,GLASS_LIGHT_THEME
+from phyvista.materials import getGLASS
 
 def BiconvexLensGrid(position,direction,radius,curvature_radius,minimum_width=0,curvature_radius_back=None): 
     """Builds the geometry of a lens as an intersection of two spheres and a cylinder."""
@@ -17,7 +17,7 @@ def BiconvexLensGrid(position,direction,radius,curvature_radius,minimum_width=0,
     c = pv.Cylinder(center=position,direction=direction,radius=radius,height=2*(d1+d2)).triangulate(inplace=True)
     return s1.boolean_intersection(s2).boolean_intersection(c)
 
-def BiconvexLens(position,direction,radius,curvature_radius,minimum_width=0,curvature_radius_back=None,style="semirealistic") -> Element:
+def BiconvexLens(position,direction,radius,curvature_radius,minimum_width=0,curvature_radius_back=None) -> Element:
     """Returns an Element representing a biconvex lens
 
     Args:
@@ -27,19 +27,13 @@ def BiconvexLens(position,direction,radius,curvature_radius,minimum_width=0,curv
         curvature_radius (float): Curvature of the lens face
         minimum_width (float, optional): Edge width. Defaults to 0.
         curvature_radius_back (float, optional): Curvature of the backface. If None, it will be the same as the front face. Defaults to None.
-        style (str, optional): Dictates the material used for the lens. 'semirealistic' (GLASS material) or 'light_theme' (GLASS_LIGHT_THEME material). Defaults to "semirealistic".
 
     Returns:
         Element
     """
     
     grid = BiconvexLensGrid(position,direction,radius,curvature_radius,minimum_width,curvature_radius_back)
-    if style=="semirealistic":
-        material=GLASS
-    elif style=="light_theme":
-        material = GLASS_LIGHT_THEME
-    else:
-        raise ValueError(f"Unknwonw style for a lens : '{style}")
+    material = getGLASS()
     return Element(grid,material)
 
 

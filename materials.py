@@ -24,20 +24,26 @@ GLASS_LIGHT_THEME = Material(color="lightblue",opacity=0.2,specular=1,diffuse=0.
 METAL_DARK_THEME = Material(color="white",specular=1,diffuse=0.1,smooth_shading=True, split_sharp_edges=True,specular_power=10)
 METAL_LIGHT_THEME = METAL_DARK_THEME.variant(diffuse=0.8)
 
-GLASS = GLASS_LIGHT_THEME
-METAL = METAL_LIGHT_THEME
+GLASS_BY_STYLE = {"light":GLASS_LIGHT_THEME,"dark":GLASS_DARK_THEME}
+METAL_BY_STYLE = {"light":METAL_LIGHT_THEME,"dark":METAL_DARK_THEME}
 
-def set_theme(theme:str):
-    global GLASS,METAL
-    if theme == "default":
-        GLASS = GLASS_LIGHT_THEME
-        METAL = METAL_LIGHT_THEME
+def getAutoStyle():
+    theme = pv.global_theme.name
+    if theme == "document":
+        return "light"
     elif theme == "dark":
-        GLASS = GLASS_DARK_THEME
-        METAL = METAL_DARK_THEME
-    else:
-        raise ValueError(f"Theme '{theme}' unknown.")
+        return "dark"
+    raise ValueError(f"Theme '{theme}' unknown. Impossible to find an adequate style automatically.")
+    
+def getGLASS(style="auto"):
+    if style == "auto":
+        style = getAutoStyle()
+    return GLASS_BY_STYLE[style]
 
+def getMETAL(style="auto"):
+    if style == "auto":
+        style = getAutoStyle()
+    return METAL_BY_STYLE[style]
 
 def SmoothMaterial(color) -> Material:
     return Material(color=color,smooth_shading=True)
