@@ -20,7 +20,7 @@ class Material:
         return newmat
 
 GLASS_DARK_THEME = Material(color="white",opacity=0.6,specular=1,diffuse=0.1,smooth_shading=True, split_sharp_edges=True,specular_power=20)
-GLASS_LIGHT_THEME = Material(color="lightblue",opacity=0.2,specular=1,diffuse=0.2,ambient=1,smooth_shading=True, split_sharp_edges=True,specular_power=20)
+GLASS_LIGHT_THEME = Material(color="lightblue",opacity=0.3,specular=1,diffuse=0.2,ambient=1,smooth_shading=True, split_sharp_edges=True,specular_power=20)
 METAL_DARK_THEME = Material(color="white",specular=1,diffuse=0.1,smooth_shading=True, split_sharp_edges=True,specular_power=10)
 METAL_LIGHT_THEME = METAL_DARK_THEME.variant(diffuse=0.8)
 
