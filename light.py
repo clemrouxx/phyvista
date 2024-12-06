@@ -3,7 +3,7 @@ from phyvista.core import *
 from matplotlib import colors
 from phyvista import materials
 
-def StraightBeam(pos1,pos2,radius,style="semirealistic",radial_fade_factor=2,color="red",opacity_unit_distance=0.4,relative_intensity=1.0,clipping_normal_start=None,clipping_normal_end=None) -> Element:
+def StraightBeam(pos1,pos2,radius,style="simple",radial_fade_factor=2,color="red",opacity_unit_distance=0.4,relative_intensity=1.0,clipping_normal_start=None,clipping_normal_end=None) -> Element:
     """
     Returns an Element representing a straight (cylindrical) laser beam, going from pos1 to pos2 with a given beam radius.
     Optional Parameters :
@@ -25,7 +25,7 @@ def StraightBeam(pos1,pos2,radius,style="semirealistic",radial_fade_factor=2,col
         raise ValueError(f"Unkwnown beam style '{style}'")
     return Element(grid,material)
 
-def FocusedBeam(pos1,pos2,focus_pos_param,starting_radius=None,divergence=None,radial_fade_factor=2,style="semirealistic",color="red",opacity_unit_distance=0.1,relative_intensity=1.0) -> Element:
+def FocusedBeam(pos1,pos2,focus_pos_param,starting_radius=None,divergence=None,radial_fade_factor=2,style="simple",color="red",opacity_unit_distance=0.1,relative_intensity=1.0) -> Element:
     """Creates an Element representing a light beam perfectly focused at a point.
 
     Args:
