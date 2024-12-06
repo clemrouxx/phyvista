@@ -64,6 +64,11 @@ class Element:
         if not inplace:
             return Element(newgrid,self.material.copy())
 
+    def clip(self,normal,origin,inplace=False):
+        newgrid = self.grid.clip(normal,origin,inplace=inplace)
+        if not inplace:
+            return Element(newgrid,self.material.copy())
+
 class Group:
     def __init__(self,elements=[], grids = [],materials = []):
         if len(elements)==0:

@@ -3,7 +3,7 @@ from phyvista.core import *
 from matplotlib import colors
 from phyvista import materials
 
-def StraightBeam(pos1,pos2,radius,style="semirealistic",radial_fade_factor=2,color="red",opacity_unit_distance=1,opacity=0.1) -> Element:
+def StraightBeam(pos1,pos2,radius,style="semirealistic",radial_fade_factor=2,color="red",opacity_unit_distance=0.4,relative_intensity=1.0,clipping_normal_start=None,clipping_normal_end=None) -> Element:
     """
     Returns an Element representing a straight (cylindrical) laser beam, going from pos1 to pos2 with a given beam radius.
     Optional Parameters :
@@ -11,19 +11,21 @@ def StraightBeam(pos1,pos2,radius,style="semirealistic",radial_fade_factor=2,col
         radial_fade_factor : used in the 'semirealistic' style, characterizes the gaussian curoff. default : 2.
         color : color of the beam. default : 'red'
         opacity_unit_distance : used in the 'semirealistic' style, distance of the view ray over which the laser beam seems totally opaque.
-        opacity : used in the 'simple' style, opacity of the material.
+        relative_intensity : used in the both styles, changes the diffuse parameter or the opacity respectively. Defaults to 1.0.
+        clipping_normal_start : normal vector of the plane according to which the laser beam should be clipped, at the first position. Facing outwards. No additionnal clipping if None (default).
+        clipping_normal_end : idem for the second position.
     """
     if style=="semirealistic":
-        grid = StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor)
-        material = BeamMaterial(color,opacity_unit_distance)
+        grid = StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor,clipping_normal_start=clipping_normal_start,clipping_normal_end=clipping_normal_end)
+        material = BeamMaterial(color,relative_intensity,opacity_unit_distance)
     elif style=="simple":
-        grid = StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor,resolution_radius=2,surfacic_cells=True)
-        material = SimpleBeamMaterial(color,opacity)
+        grid = StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor,resolution_radius=2,surfacic_cells=True,clipping_normal_start=clipping_normal_start,clipping_normal_end=clipping_normal_end)
+        material = SimpleBeamMaterial(color,0.1*relative_intensity)
     else:
         raise ValueError(f"Unkwnown beam style '{style}'")
     return Element(grid,material)
 
-def FocusedBeam(pos1,pos2,focus_pos_param,starting_radius=None,divergence=None,radial_fade_factor=2,style="semirealistic",color="red",opacity_unit_distance=0.1,opacity=0.1) -> Element:
+def FocusedBeam(pos1,pos2,focus_pos_param,starting_radius=None,divergence=None,radial_fade_factor=2,style="semirealistic",color="red",opacity_unit_distance=0.1,relative_intensity=1.0) -> Element:
     """Creates an Element representing a light beam perfectly focused at a point.
 
     Args:
@@ -42,10 +44,10 @@ def FocusedBeam(pos1,pos2,focus_pos_param,starting_radius=None,divergence=None,r
         Element
     """
     if style=="semirealistic":
-        material = BeamMaterial(color,opacity_unit_distance,clim=[0,50])
+        material = BeamMaterial(color,relative_intensity,opacity_unit_distance,clim=[0,50])
         grid = FocusedBeamVolumeGrid(pos1,pos2,focus_pos_param,starting_radius,divergence,resolution_height=30,resolution_radius=25,radial_fade_factor=radial_fade_factor)
     elif style=="simple":
-        material = SimpleBeamMaterial(color,opacity)
+        material = SimpleBeamMaterial(color,0.1*relative_intensity)
         grid = FocusedBeamVolumeGrid(pos1,pos2,focus_pos_param,starting_radius,divergence,resolution_height=30,resolution_radius=2,radial_fade_factor=radial_fade_factor,surfacic_cells=True)
     else:
         raise ValueError(f"Unkwnown beam style '{style}'")
@@ -54,15 +56,33 @@ def FocusedBeam(pos1,pos2,focus_pos_param,starting_radius=None,divergence=None,r
 def GlowingOrb(center,radius,color,saturation_color="white") -> Element:
     return Element(SphericalVolumeGrid(center,radius),GlowingOrbMaterial(color,saturation_color))
 
-def StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor=2,resolution_height=10,resolution_theta=15,resolution_radius=10,surfacic_cells=False):
-    pos1 = np.array(pos1)
-    pos2 = np.array(pos2)
-    grid = CylindricalVolumeGrid(pos1,pos2-pos1,radius_profile=lambda p:radius,resolution_height=resolution_height,resolution_theta=resolution_theta,resolution_radius=resolution_radius,surfacic_cells=surfacic_cells)
+def StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor=2,resolution_height=10,resolution_theta=15,resolution_radius=10,surfacic_cells=False,clipping_normal_start=None,clipping_normal_end=None):
+    pos1_modified = np.array(pos1)
+    pos2_modified = np.array(pos2)
+    axis = pos2_modified-pos1_modified
+
+    # If we do additionnal clipping of the beam, we need to prolong the beam first
+    if type(clipping_normal_start) != type(None):
+        pos1_modified -= 3*radius*normalized(axis)
+    if type(clipping_normal_end) != type(None):
+        pos2_modified += 3*radius*normalized(axis)
+    axis = pos2_modified-pos1_modified
+
+    grid = CylindricalVolumeGrid(pos1_modified,axis,radius_profile=lambda p:radius,resolution_height=resolution_height,resolution_theta=resolution_theta,resolution_radius=resolution_radius,surfacic_cells=surfacic_cells)
+    
+    # We then do the eventual clipping of the beam on both ends
+    if type(clipping_normal_start) != type(None):
+        grid.clip(clipping_normal_start,pos1,inplace=True)
+    if type(clipping_normal_end) != type(None):
+        grid.clip(clipping_normal_end,pos2,inplace=True)
+
+    # Adding the 'intensity' scalar field
     if radial_fade_factor == 0:
         intensity = np.ones(grid["r"].shape)
     else:
         intensity = np.exp(-(grid["r"]/(radius/radial_fade_factor))**2)
     grid["intensity"] = intensity
+
     return grid
 
 def FocusedBeamVolumeGrid(pos1,pos2,focus_pos_param,starting_radius=None,divergence=None,resolution_height=30,resolution_radius=25,radial_fade_factor=2,surfacic_cells=False):
@@ -88,8 +108,8 @@ def FocusedBeamVolumeGrid(pos1,pos2,focus_pos_param,starting_radius=None,diverge
 def GlowingOrbMaterial(color,saturation_color="white"):
     return materials.Material("volume",cmap=colors.LinearSegmentedColormap.from_list("",[saturation_color,color]),opacity="linear_r",opacity_unit_distance=0.7)
 
-def BeamMaterial(color="red",opacity_unit_distance=1,**parameters):
-    return materials.Material("volume","intensity",cmap=[color],diffuse=1,opacity_unit_distance=opacity_unit_distance,**parameters)
+def BeamMaterial(color="red",relative_intensity=1,opacity_unit_distance=1,**parameters):
+    return materials.Material("volume","intensity",cmap=[color],diffuse=relative_intensity,opacity_unit_distance=opacity_unit_distance,**parameters)
 
 def SimpleBeamMaterial(color="red",opacity=0.1):
     return materials.Material(color=color,opacity=opacity,ambient=1)

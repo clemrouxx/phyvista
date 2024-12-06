@@ -2,7 +2,7 @@ import pyvista as pv
 import numpy as np
 import os
 from phyvista.core import *
-from phyvista.materials import getGLASS
+from phyvista.materials import getGLASS, getMETAL
 
 def BiconvexLensGrid(position,direction,radius,curvature_radius,minimum_width=0,curvature_radius_back=None): 
     """Builds the geometry of a lens as an intersection of two spheres and a cylinder."""
@@ -38,14 +38,14 @@ def BiconvexLens(position,direction,radius,curvature_radius,minimum_width=0,curv
     return Element(grid,material)
 
 
-def CubicSplitter(position,direction1,direction2,size):
+def CubicSplitter(position,direction1,direction2,size=1.0):
     """Creates an Element representing typically a polarized beam splitter
 
     Args:
         position (3D vector): center of the cube
         direction1 (Nonzero 3D vector): direction of one of the light beams in/out if the PBS
         direction2 (Nonzero 3D vector): direction of the other light beam (reflection of the first one)
-        size (float): side length of the cube
+        size (float): side length of the cube. Defaults to 1.0.
 
     Returns:
         Element: Element to be added to the plot
