@@ -91,5 +91,6 @@ def Mirror(position,direction,radius=0.5,width=0.0) -> Element:
     Returns:
         Element: Element to be added to the plot
     """
-    grid = pv.Cylinder(position,direction,radius,height=width)
+    direction = normalized(np.array(direction))
+    grid = pv.Cylinder(center=position-width/2*direction,radius=radius,height=width,direction=direction)
     return Element(grid,getMETAL())
