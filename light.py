@@ -20,7 +20,7 @@ def StraightBeam(pos1,pos2,radius,style="semirealistic",radial_fade_factor=2,col
         material = VolumicBeamMaterial(color,relative_intensity,opacity_unit_distance)
     elif style=="simple":
         grid = StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor,resolution_radius=2,surfacic_cells=True,clipping_normal_start=clipping_normal_start,clipping_normal_end=clipping_normal_end)
-        material = SimpleBeamMaterial(color,0.1*relative_intensity)
+        material = SimpleBeamMaterial(color,relative_intensity)
     else:
         raise ValueError(f"Unkwnown beam style '{style}'")
     return Element(grid,material)
@@ -47,7 +47,7 @@ def FocusedBeam(pos1,pos2,focus_pos_param,starting_radius=None,divergence=None,r
         material = VolumicBeamMaterial(color,relative_intensity,opacity_unit_distance,clim=[0,50])
         grid = FocusedBeamVolumeGrid(pos1,pos2,focus_pos_param,starting_radius,divergence,resolution_height=30,resolution_radius=25,radial_fade_factor=radial_fade_factor)
     elif style=="simple":
-        material = SimpleBeamMaterial(color,0.1*relative_intensity)
+        material = SimpleBeamMaterial(color,relative_intensity)
         grid = FocusedBeamVolumeGrid(pos1,pos2,focus_pos_param,starting_radius,divergence,resolution_height=30,resolution_radius=2,radial_fade_factor=radial_fade_factor,surfacic_cells=True)
     else:
         raise ValueError(f"Unkwnown beam style '{style}'")
@@ -111,8 +111,9 @@ def GlowingOrbMaterial(color,saturation_color="white"):
 def VolumicBeamMaterial(color="red",relative_intensity=1,opacity_unit_distance=1,**parameters):
     return materials.Material("volume","intensity",cmap=[color],diffuse=relative_intensity,opacity_unit_distance=opacity_unit_distance,**parameters)
 
-def SimpleBeamMaterial(color="red",opacity=0.1):
-    return materials.Material(color=color,opacity=opacity,ambient=1,diffuse=1)
+def SimpleBeamMaterial(color="red",relative_intensity=1.0):
+    opacity = 0.1 if (materials.getAutoStyle() == "light") else 0.2 # Default opacity depending on the overall theme
+    return materials.Material(color=color,opacity=opacity*relative_intensity,ambient=1,diffuse=1)
 
 def CylindricalVolumeGrid(origin,axis,radius_profile,resolution_height=20,resolution_radius=20,resolution_theta=60,include_parameter=None,surfacic_cells=False):
     # radius_profile is a function of the axis parameter (from 0 to 1)
