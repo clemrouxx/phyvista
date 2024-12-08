@@ -2,6 +2,7 @@ import numpy as np
 from phyvista.core import *
 from matplotlib import colors
 from phyvista import materials
+from phyvista.optics import OpticsElement
 
 def StraightBeam(pos1,pos2,radius,style="simple",radial_fade_factor=2,color="red",opacity_unit_distance=0.4,relative_intensity=1.0,clipping_normal_start=None,clipping_normal_end=None) -> Element:
     """
@@ -57,6 +58,11 @@ def GlowingOrb(center,radius,color,saturation_color="white") -> Element:
     return Element(SphericalVolumeGrid(center,radius),GlowingOrbMaterial(color,saturation_color))
 
 def StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor=2,resolution_height=10,resolution_theta=15,resolution_radius=10,surfacic_cells=False,clipping_normal_start=None,clipping_normal_end=None):
+    if type(pos1) == OpticsElement:
+        pos1, clipping_normal_start = pos1.center,pos1.normal
+    if type(pos2) == OpticsElement:
+        pos2, clipping_normal_end = pos2.center,pos2.normal
+    
     pos1_modified = np.array(pos1)
     pos2_modified = np.array(pos2)
     axis = pos2_modified-pos1_modified
@@ -72,8 +78,12 @@ def StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor=2,resolution_heig
     
     # We then do the eventual clipping of the beam on both ends
     if type(clipping_normal_start) != type(None):
+        if np.dot(clipping_normal_start,axis) > 0: # Automatically choose the right side of the clipping plane
+            clipping_normal_start = -clipping_normal_start
         grid.clip(clipping_normal_start,pos1,inplace=True)
     if type(clipping_normal_end) != type(None):
+        if np.dot(clipping_normal_end,axis) < 0: # Automatically choose the right side of the clipping plane
+            clipping_normal_end = -clipping_normal_end
         grid.clip(clipping_normal_end,pos2,inplace=True)
 
     # Adding the 'intensity' scalar field
@@ -88,8 +98,8 @@ def StraightBeamVolumeGrid(pos1,pos2,radius,radial_fade_factor=2,resolution_heig
 def FocusedBeamVolumeGrid(pos1,pos2,focus_pos_param,starting_radius=None,divergence=None,resolution_height=30,resolution_radius=25,radial_fade_factor=2,surfacic_cells=False):
     if divergence==None and starting_radius==None:
         raise ValueError("Please provide either a divergence value or a starting_radius.")
-    pos1 = np.array(pos1)
-    pos2 = np.array(pos2)
+    pos1 = pos1.center if type(pos1)==OpticsElement else np.array(pos1)
+    pos2 = ops2.center if type(pos2)==OpticsElement else np.array(pos2)
     length = np.sqrt(np.linalg.norm(pos1-pos2))
     if starting_radius == None:
         radius_factor = np.tan(divergence)*length

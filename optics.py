@@ -4,6 +4,25 @@ import os
 from phyvista.core import *
 from phyvista.materials import getGLASS, getMETAL
 
+class OpticsElement(Element):
+    def __init__(self,grid,material,center,normal):
+        super().__init__(grid,material)
+        self.center = np.array(center) # Position on which light beams can be transmitted/reflected
+        self.normal = np.array(normal) # Normal of the reflective/transmissive surface
+
+    def copy(self):
+        return OpticsElement(self.grid.copy(),self.material.copy(),self.center,self.normal)
+
+    def translate(self,vector,inplace=False):
+        if inplace:
+            super().translate(vector,True)
+            self.center += vector
+        else:
+            new_elmt = self.copy()
+            new_elmt.translate(vector,True)
+            return new_elmt
+    # TODO : also other transformations...
+
 def BiconvexLensGrid(position,direction,radius,curvature_radius,minimum_width=0,curvature_radius_back=None): 
     """Builds the geometry of a lens as an intersection of two spheres and a cylinder."""
     position,direction = np.array(position), np.array(direction)
@@ -18,7 +37,7 @@ def BiconvexLensGrid(position,direction,radius,curvature_radius,minimum_width=0,
     c = pv.Cylinder(center=position,direction=direction,radius=radius,height=2*(d1+d2)).triangulate(inplace=True)
     return s1.boolean_intersection(s2).boolean_intersection(c)
 
-def BiconvexLens(position,direction,radius,curvature_radius,minimum_width=0,curvature_radius_back=None) -> Element:
+def BiconvexLens(position,direction,radius,curvature_radius,minimum_width=0,curvature_radius_back=None) -> OpticsElement:
     """Returns an Element representing a biconvex lens
 
     Args:
@@ -35,10 +54,10 @@ def BiconvexLens(position,direction,radius,curvature_radius,minimum_width=0,curv
     
     grid = BiconvexLensGrid(position,direction,radius,curvature_radius,minimum_width,curvature_radius_back)
     material = getGLASS()
-    return Element(grid,material)
+    return OpticsElement(grid,material,position,direction)
 
 
-def CubicSplitter(position,direction1,direction2,size=1.0):
+def CubicSplitter(position,direction1,direction2,size=1.0) -> OpticsElement:
     """Creates an Element representing typically a polarized beam splitter
 
     Args:
@@ -62,9 +81,9 @@ def CubicSplitter(position,direction1,direction2,size=1.0):
     grid = pv.UnstructuredGrid(cells, np.full(len(cells),pv.CellType.QUAD,dtype=np.uint), points)
     grid = grid.scale(size).translate(position)
 
-    return Element(grid,getGLASS())
+    return OpticsElement(grid,getGLASS(),position,direction1+direction2)
 
-def Plate(position,direction,radius=0.5,width=0.0) -> Element:
+def Plate(position,direction,radius=0.5,width=0.0) -> OpticsElement:
     """Creates an Element representing a waveplate or beamsplitter
 
     Args:
@@ -77,9 +96,9 @@ def Plate(position,direction,radius=0.5,width=0.0) -> Element:
         Element : Element to be added to the plot
     """
     grid = pv.Cylinder(position,direction,radius,height=width)
-    return Element(grid,getGLASS())
+    return OpticsElement(grid,getGLASS(),position,direction)
 
-def Mirror(position,direction,radius=0.5,width=0.0) -> Element:
+def Mirror(position,direction,radius=0.5,width=0.0) -> OpticsElement:
     """Creates an Element representing a circular flat mirror
 
     Args:
@@ -89,8 +108,8 @@ def Mirror(position,direction,radius=0.5,width=0.0) -> Element:
         width (float, optional): Defaults to 0.0.
 
     Returns:
-        Element: Element to be added to the plot
+        OpticsElement: Element to be added to the plot
     """
     direction = normalized(np.array(direction))
     grid = pv.Cylinder(center=position-width/2*direction,radius=radius,height=width,direction=direction)
-    return Element(grid,getMETAL())
+    return OpticsElement(grid,getMETAL(),position,direction)
