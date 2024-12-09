@@ -41,12 +41,12 @@ class Element:
         return Element(self.grid.copy(),self.material.copy())
 
     def translate(self,vector,inplace=False):
-        newgrid = self.grid.translate(vector,inplace)
+        newgrid = self.grid.translate(vector,inplace=inplace)
         if not inplace:
             return Element(newgrid,self.material.copy())
 
     def rotate_vector(self,vector,angle,point,inplace=False):
-        newgrid = self.grid.rotate_vector(vector,angle,point,inplace)
+        newgrid = self.grid.rotate_vector(vector,angle,point,inplace=inplace)
         if not inplace:
             return Element(newgrid,self.material.copy())
 
