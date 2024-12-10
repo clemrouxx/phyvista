@@ -1,6 +1,8 @@
 import pyvista as pv
 import numpy as np
 from phyvista.materials import plotGridWithMaterial,Material
+from pyvista.core.utilities import transformations as transf
+
 
 U_X = np.array((1.0,0,0))
 U_Y = np.array((0,1.0,0))
@@ -40,15 +42,18 @@ class Element:
     def copy(self):
         return Element(self.grid.copy(),self.material.copy())
 
-    def translate(self,vector,inplace=False):
-        newgrid = self.grid.translate(vector,inplace=inplace)
+    def transform(self,transform,inplace=False):
+        newgrid = self.grid.transform(transform,inplace=inplace)
         if not inplace:
             return Element(newgrid,self.material.copy())
 
+    def translate(self,vector,inplace=False):
+        matrix = np.eye(4)
+        matrix[0:3,3] = vector # Create manually the translation 4x4 matrix
+        return self.transform(matrix,inplace=inplace)
+
     def rotate_vector(self,vector,angle,point,inplace=False):
-        newgrid = self.grid.rotate_vector(vector,angle,point,inplace=inplace)
-        if not inplace:
-            return Element(newgrid,self.material.copy())
+        return self.transform(transf.axis_angle_rotation(vector,angle,point),inplace=inplace)
 
     def rotate_x(self,angle,point=ORIGIN,inplace=False):
         return self.rotate_vector(U_X,angle,point,inplace)

@@ -3,6 +3,7 @@ import numpy as np
 import os
 from phyvista.core import *
 from phyvista.materials import getGLASS, getMETAL
+from pyvista.core.utilities import transformations as transf
 
 class OpticsElement(Element):
     def __init__(self,grid,material,center,normal):
@@ -12,15 +13,58 @@ class OpticsElement(Element):
 
     def copy(self):
         return OpticsElement(self.grid.copy(),self.material.copy(),self.center,self.normal)
-
-    def translate(self,vector,inplace=False):
+    
+    def transform(self,transform,normal_transform=np.eye(4),inplace=False):
         if inplace:
-            super().translate(vector,True)
-            self.center += vector
+            super().transform(transform,True)
+            self.center = transf.apply_transformation_to_points(transform,np.array([self.center]))[0]
+            self.normal = transf.apply_transformation_to_points(normal_transform,np.array([self.normal]))[0]
         else:
             new_elmt = self.copy()
-            new_elmt.translate(vector,True)
+            new_elmt.transform(transform,normal_transform,inplace=True)
             return new_elmt
+
+    def translate(self,vector,inplace=False):
+        """Translates the element
+
+        Args:
+            vector (3D vector as numpy.array): Translation vector
+            inplace (bool, optional): Defaults to False.
+
+        Returns:
+            OpticsElement OR None: Translated element if inplace==False
+        """
+        matrix = np.eye(4)
+        matrix[0:3,3] = vector
+        return self.transform(matrix,inplace=inplace)
+
+    def rotate_vector(self,vector,angle,point=None,inplace=False):
+        """Rotate the element around a given vector with a given angle
+
+        Args:
+            vector (3D vector as numpy.array): Rotation axis direction
+            angle (float): Angle in degrees
+            point (3D vector as numpy.array, optional): Point which the rotation axis crosses. If None, the property center is used. Defaults to None.
+            inplace (bool, optional): Defaults to False.
+
+        Returns:
+            OpticalElement OR None : Rotated element if inplace==False
+        """
+        if type(point) == type(None):
+            point = self.center
+        point_transform = transf.axis_angle_rotation(vector,angle,point)
+        normal_transform = transf.axis_angle_rotation(vector,angle,ORIGIN)
+        return self.transform(point_transform,normal_transform,inplace=inplace)
+
+    def rotate_x(self,angle,point=None,inplace=False):
+        return self.rotate_vector(U_X,angle,point,inplace)
+
+    def rotate_y(self,angle,point=None,inplace=False):
+        return self.rotate_vector(U_Y,angle,point,inplace)
+
+    def rotate_z(self,angle,point=None,inplace=False):
+        return self.rotate_vector(U_Z,angle,point,inplace)
+
     # TODO : also other transformations...
 
 def BiconvexLensGrid(position,direction,radius,curvature_radius,minimum_width=0,curvature_radius_back=None): 
