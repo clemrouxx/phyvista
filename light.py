@@ -119,7 +119,7 @@ def GlowingOrbMaterial(color,saturation_color="white"):
     return materials.Material("volume",cmap=colors.LinearSegmentedColormap.from_list("",[saturation_color,color]),opacity="linear_r",opacity_unit_distance=0.7)
 
 def VolumicBeamMaterial(color="red",relative_intensity=1,opacity_unit_distance=1,**parameters):
-    return materials.Material("volume","intensity",cmap=[color],diffuse=relative_intensity,opacity_unit_distance=opacity_unit_distance,**parameters)
+    return materials.Material("volume","intensity",cmap=[color],diffuse=1,opacity=[0,1.0*relative_intensity],opacity_unit_distance=opacity_unit_distance,**parameters)
 
 def SimpleBeamMaterial(color="red",relative_intensity=1.0):
     opacity = 0.1 if (materials.getAutoStyle() == "light") else 0.2 # Default opacity depending on the overall theme

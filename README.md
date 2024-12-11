@@ -28,3 +28,9 @@ The "core" and "material" python files provides functionnality used my most of t
 - lattices.py : repeating patterns & crystals
 - optics.py : optical elements such as lenses
 - light.py : laser beams, "fluorescent" points
+
+#### Example images
+Scene from running the example 'example_lattices.py' :
+![Scene from running the example 'example_lattices.py'](images/lattices_nacl.png)
+Scene from running the example 'example_optics.py' (with global theme 'dark' and 'semirealistic' beam style) :
+![Scene from running the example 'example_optics.py'](images/optics.png)
