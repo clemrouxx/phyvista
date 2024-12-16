@@ -36,15 +36,18 @@ class Crystal:
                 for k in range(indices_ranges[2][0],indices_ranges[2][1]+1):
                     self.plotPattern(plotter,(i,j,k))
 
-    def addElement(self,element:Element,indices):# Add a particule with position defined by indices
-        pos = self.point(*indices)
+    def addElement(self,element:Element,indices=None):# Add a particule with position defined by indices
+        if type(indices)==type(None): # Default : no translation
+            pos = np.zeros((3,))
+        else:
+            pos = self.point(*indices)
         self.pattern.append(element.translate(pos))
 
-    def addNewElement(self,grid,material,indices):
+    def addNewElement(self,grid,material,indices=None):
         element = Element(grid,material)
         self.addElement(element,indices)
 
-def hexagonalLattice(scale=1):#Returns base vectors for a hexagonal lattice (TODO : generalize)
+def hexagonalLatticeVectors(scale=1):#Returns base vectors for a hexagonal lattice (TODO : generalize)
     angle = 2*np.pi/3
     v1 = U_X
     v2 = np.cos(np.pi*2/3)*U_X + np.sin(np.pi*2/3)*U_Y

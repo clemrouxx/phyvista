@@ -34,3 +34,5 @@ Scene from running the example 'example_lattices.py' :
 ![Scene from running the example 'example_lattices.py'](images/lattices_nacl.png)
 Scene from running the example 'example_optics.py' (with global theme 'dark' and 'semirealistic' beam style) :
 ![Scene from running the example 'example_optics.py'](images/optics.png)
+Scene from running the example 'graphene.py' :
+![Scene from running the example 'graphene.py'](images/graphene.png)
